@@ -1,5 +1,4 @@
 import kfp.dsl as dsl
-import kfp.components as components
 import os
 import json
 import subprocess
@@ -11,18 +10,19 @@ from sklearn.ensemble import RandomForestRegressor  # Use Regressor for Boston r
 from sklearn.metrics import mean_squared_error, r2_score
 import joblib
 import dvc.api
+from kfp import compiler  # Import for v2 compilation
 
-@dsl.component
+@dsl.component(base_image='python:3.9')
 def data_extraction(output_path: dsl.OutputPath(str)) -> str:
     """Fetch versioned dataset using DVC."""
     # Assuming the repo is the current directory and DVC is set up.
-    # For remote fetch, use dvc.api.get(url='https://github.com/yourusername/mlops-kubeflow-assignment.git', path='data/raw_data.csv', rev='main', out=output_path)
+    # For remote fetch, use dvc.api.get(url='https://github.com/saba-shakeel11/Assignmnet4.git', path='data/raw_data.csv', rev='main', out=output_path)
     # But for simplicity, assume dvc pull if needed.
     subprocess.run(['dvc', 'pull', 'data/raw_data.csv'], check=True)
     raw_data_path = 'data/raw_data.csv'
     return raw_data_path
 
-@dsl.component
+@dsl.component(base_image='python:3.9')
 def data_preprocessing(input_path: str, train_x_path: dsl.OutputPath(str), train_y_path: dsl.OutputPath(str), test_x_path: dsl.OutputPath(str), test_y_path: dsl.OutputPath(str)):
     """Preprocess the data: clean, scale, split."""
     df = pd.read_csv(input_path)
@@ -40,7 +40,7 @@ def data_preprocessing(input_path: str, train_x_path: dsl.OutputPath(str), train
     np.save(test_x_path, X_test_scaled)
     np.save(test_y_path, y_test)
 
-@dsl.component
+@dsl.component(base_image='python:3.9')
 def model_training(train_x_path: str, train_y_path: str, model_path: dsl.OutputPath(str)):
     """Train a Random Forest Regressor model."""
     X_train = np.load(train_x_path)
@@ -49,7 +49,7 @@ def model_training(train_x_path: str, train_y_path: str, model_path: dsl.OutputP
     model.fit(X_train, y_train)
     joblib.dump(model, model_path)
 
-@dsl.component
+@dsl.component(base_image='python:3.9')
 def model_evaluation(test_x_path: str, test_y_path: str, model_path: str, metrics_path: dsl.OutputPath(str)):
     """Evaluate the model and save metrics."""
     X_test = np.load(test_x_path)
@@ -64,23 +64,19 @@ def model_evaluation(test_x_path: str, test_y_path: str, model_path: str, metric
 
 # Compile components to YAML (run this locally to generate components/*.yaml)
 if __name__ == '__main__':
-    components.create_component_from_func(
+    compiler.Compiler().compile(
         data_extraction,
-        output_component_file='components/data_extraction.yaml',
-        packages_to_install=['dvc', 'subprocess']
+        'components/data_extraction.yaml'
     )
-    components.create_component_from_func(
+    compiler.Compiler().compile(
         data_preprocessing,
-        output_component_file='components/data_preprocessing.yaml',
-        packages_to_install=['pandas', 'numpy', 'scikit-learn']
+        'components/data_preprocessing.yaml'
     )
-    components.create_component_from_func(
+    compiler.Compiler().compile(
         model_training,
-        output_component_file='components/model_training.yaml',
-        packages_to_install=['numpy', 'scikit-learn', 'joblib']
+        'components/model_training.yaml'
     )
-    components.create_component_from_func(
+    compiler.Compiler().compile(
         model_evaluation,
-        output_component_file='components/model_evaluation.yaml',
-        packages_to_install=['numpy', 'scikit-learn', 'joblib', 'json']
+        'components/model_evaluation.yaml'
     )

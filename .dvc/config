@@ -1,0 +1,4 @@
+[core]
+    remote = mlops_assignment
+['remote "mlops_assignment"']
+    url = E:\dvc_remote
