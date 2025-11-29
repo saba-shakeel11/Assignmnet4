@@ -1,0 +1,6 @@
+kfp==2.9.0  # Kubeflow Pipelines SDK (adjust to compatible version if needed)
+dvc==3.55.2  # Data Version Control
+scikit-learn==1.5.2
+pandas==2.2.3
+numpy==1.26.4
+joblib==1.4.2

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# Data files (tracked by DVC, not Git)
+data/raw_data.csv
+data/processed/
+
+# Kubeflow artifacts
+components/*.yaml
+pipeline.yaml
+
+# Misc
+*.npy
+model.pkl
+metrics.json
+*.zip
+*.rar
+venv/
